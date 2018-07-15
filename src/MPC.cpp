@@ -6,7 +6,7 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 40;
+size_t N = 10;
 double dt = 0.1;
 
 // This value assumes the model presented in the classroom is used.
@@ -24,7 +24,7 @@ const double Lf = 2.67;
 //targets to minimize 
 double ref_cte  = 0;
 double ref_epsi = 0;
-double ref_v    = 60;
+double ref_v    = 45;
 
 //array indecies 
 size_t x_start = 0;
@@ -42,11 +42,11 @@ private:
   // Fitted polynomial coefficients
   Eigen::VectorXd coeffs;
 
-  double weight_cte   = 100 ;
-  double weight_epsi  = 100 ;
+  double weight_cte   = 150 ;
+  double weight_epsi  = 60 ;
   double weight_v     = 10 ;
-  double weight_a     = 40 ;
-  double weight_delta = 25 ;
+  double weight_a     = 300 ;
+  double weight_delta = 5500 ;
 
 public:
   FG_eval(Eigen::VectorXd coeffs) { this->coeffs = coeffs; }
