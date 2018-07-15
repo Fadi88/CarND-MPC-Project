@@ -71,7 +71,9 @@ int main() {
   // MPC is initialized here!
   MPC mpc;
 
-  h.onMessage([&mpc](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+  double Lf = 2.67;
+
+  h.onMessage([&mpc , Lf](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -91,8 +93,7 @@ int main() {
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
-          
-
+          v *= 0.44704;
 
           /*
           * TODO: Calculate steering angle and throttle using MPC.
@@ -125,7 +126,7 @@ int main() {
           double throttle_value = j[1]["throttle"];
 
           Eigen::VectorXd state(6);
-          state << 0 , 0 , 0 , v , cte , epsi ; //intial state passed to the mpc
+          state << 0, 0, 0, v, cte, epsi; //intial state passed to the mpc
           
           /* step 3 call the mpc with the trajectory fitted poly and state vector*/
           auto vars = mpc.Solve(state , coeffs);
@@ -156,10 +157,9 @@ int main() {
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          double Lf = 2.67;
+          
           msgJson["steering_angle"] = vars[0]/(deg2rad(25)*Lf);
           msgJson["throttle"] = vars[1];
-
           
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;

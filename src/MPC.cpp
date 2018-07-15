@@ -24,7 +24,7 @@ const double Lf = 2.67;
 //targets to minimize 
 double ref_cte  = 0;
 double ref_epsi = 0;
-double ref_v    = 45;
+double ref_v    = 40 * 0.44704;
 
 //array indecies 
 size_t x_start = 0;
@@ -45,8 +45,8 @@ private:
   double weight_cte   = 150 ;
   double weight_epsi  = 60 ;
   double weight_v     = 10 ;
-  double weight_a     = 300 ;
-  double weight_delta = 5500 ;
+  double weight_a     = 400 ;
+  double weight_delta = 6500 ;
 
 public:
   FG_eval(Eigen::VectorXd coeffs) { this->coeffs = coeffs; }
@@ -193,8 +193,8 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   //will be converted to -25 to 25 in the main function before sent to the simulator
   for(int i = delta_start ; i < a_start ; i++){
 
-    vars_lowerbound[i] = -1.0;
-    vars_upperbound[i] =  1.0;
+    vars_lowerbound[i] = -1.0 ;
+    vars_upperbound[i] =  1.0 ;
   }
 
   //upper and lower limit for the pwer train commands
@@ -265,10 +265,11 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   
   vector<double> ret_val;
 
-  ret_val.push_back(solution.x[delta_start]);
-  ret_val.push_back(solution.x[a_start]);
 
-  for ( int i = 0; i < N - 2; i++ ) {
+  ret_val.push_back(solution.x[delta_start +1 ]);
+  ret_val.push_back(solution.x[a_start + 1]);
+
+  for ( int i = 0 ; i < N - 2; i++ ) {
     ret_val.push_back(solution.x[x_start + i + 1]);
     ret_val.push_back(solution.x[y_start + i + 1]);
   }
