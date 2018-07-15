@@ -142,5 +142,7 @@ the main loop was also straight forward since all the main work was done by the 
 ## Latency
 
 the latency was already provided in the main repo but make a thread sleep,
-in a real embedded application however this would have been achieved using a preidoic task with certain frequency which was going to have the same effect as the solution done in the code anyway
+in a real embedded application however this would have been achieved using a preidoic task with certain frequency which was going to have the same effect as the solution done in the code anyway.
+
+to handle that in the code the model took actuations was shifted by one and also when sending the values the first one were skipped since they were also fixed in the boundry conditions to be the same as the previous step
 
