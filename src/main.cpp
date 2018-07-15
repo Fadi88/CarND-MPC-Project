@@ -77,7 +77,7 @@ int main() {
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
     string sdata = string(data).substr(0, length);
-    cout << sdata << endl;
+    // cout << sdata << endl;
     if (sdata.size() > 2 && sdata[0] == '4' && sdata[1] == '2') {
       string s = hasData(sdata);
       if (s != "") {
@@ -91,6 +91,8 @@ int main() {
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
+          
+
 
           /*
           * TODO: Calculate steering angle and throttle using MPC.
@@ -106,7 +108,6 @@ int main() {
             ptsy[i] = ((ptsx[i] - px) * sin(0-psi) - (ptsy[i] - py) * cos(0-psi));
 
           }
-
           /* step 2 get polynomial to fit the the trajctory */
           Eigen::VectorXd coeffs = polyfit(Eigen::VectorXd::Map(ptsx.data(), ptsx.size()) , Eigen::VectorXd::Map(ptsy.data(), ptsy.size()) , 3);
 
@@ -118,7 +119,7 @@ int main() {
 
           Eigen::VectorXd state(6);
           state << 0 , 0 , 0 , v , cte , epsi ; //intial state passed to the mpc
-
+          
           /* step 3 call the mpc with the trajectory fitted poly and state vector*/
           auto vars = mpc.Solve(state , coeffs);
 
