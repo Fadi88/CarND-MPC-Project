@@ -77,7 +77,7 @@ int main() {
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
     string sdata = string(data).substr(0, length);
-    // cout << sdata << endl;
+    //cout << "input" << endl << sdata << endl;
     if (sdata.size() > 2 && sdata[0] == '4' && sdata[1] == '2') {
       string s = hasData(sdata);
       if (s != "") {
@@ -102,17 +102,24 @@ int main() {
           */
 
           /*  step 1 : convert trajectory points coerdinates*/
+
+          vector<double> ptsx_shifted;
+          vector<double> ptsy_shifted;
+
           for(unsigned int i = 0 ; i < ptsx.size() ; i++){
 
-            ptsx[i] = ((ptsx[i] - px) * cos(0-psi) - (ptsy[i] - py) * sin(0-psi)); 
-            ptsy[i] = ((ptsx[i] - px) * sin(0-psi) - (ptsy[i] - py) * cos(0-psi));
+            double x_shifted = ((ptsx[i] - px) * cos(psi) + (ptsy[i] - py) * sin(psi)); 
+            double y_shifted = ((px - ptsx[i]) * sin(psi) + (ptsy[i] - py) * cos(psi));
+
+            ptsx_shifted.push_back(x_shifted);
+            ptsy_shifted.push_back(y_shifted);
 
           }
           /* step 2 get polynomial to fit the the trajctory */
-          Eigen::VectorXd coeffs = polyfit(Eigen::VectorXd::Map(ptsx.data(), ptsx.size()) , Eigen::VectorXd::Map(ptsy.data(), ptsy.size()) , 3);
+          Eigen::VectorXd coeffs = polyfit(Eigen::VectorXd::Map(ptsx_shifted.data(), ptsx_shifted.size()) , Eigen::VectorXd::Map(ptsy_shifted.data(), ptsy_shifted.size()) , 3);
 
           double cte  = polyeval(coeffs , 0 ); // of zero not px because coredinates have been transformed
-          double epsi = -1.0 *  atan(coeffs[1]); //dy/dx @x = 0 not px because of the shift is coeffs[1]
+          double epsi = -atan(coeffs[1]);
 
           double steer_value    = j[1]["steering_angle"];
           double throttle_value = j[1]["throttle"];
@@ -123,13 +130,17 @@ int main() {
           /* step 3 call the mpc with the trajectory fitted poly and state vector*/
           auto vars = mpc.Solve(state , coeffs);
 
+          //Display the waypoints/reference line
+          vector<double> next_x_vals;
+          vector<double> next_y_vals;
 
-          json msgJson;
-          // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
-          // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          double Lf = 2.67;
-          msgJson["steering_angle"] = vars[0]/(deg2rad(25)*Lf);
-          msgJson["throttle"] = vars[1];
+          double poly_inc = 2.5;
+          int point_to_plot = 25;
+
+          for(int i = 0 ; i < point_to_plot ; i++) {
+            next_x_vals.push_back(poly_inc * i);
+            next_y_vals.push_back(polyeval(coeffs , poly_inc * i));
+          }
 
           //Display the MPC predicted trajectory 
           vector<double> mpc_x_vals;
@@ -141,19 +152,18 @@ int main() {
 
             i%2 == 0 ? mpc_x_vals.push_back(vars[i]): mpc_y_vals.push_back(vars[i]);
           }
+
+          json msgJson;
+          // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
+          // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
+          double Lf = 2.67;
+          msgJson["steering_angle"] = vars[0]/(deg2rad(25)*Lf);
+          msgJson["throttle"] = vars[1];
+
+          
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
 
-          //Display the waypoints/reference line
-          vector<double> next_x_vals;
-          vector<double> next_y_vals;
-
-          double poly_inc = 2.5;
-          int point_to_plot = 20;
-          for(int i = 0 ; i < point_to_plot ; i++) {
-            next_x_vals.push_back(poly_inc * i);
-            next_y_vals.push_back(polyeval(coeffs , poly_inc * i));
-          }
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
