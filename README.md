@@ -1,7 +1,11 @@
 # CarND-Controls-MPC
+
 Self-Driving Car Engineer Nanodegree Program
 
 ---
+reflection is appended to the end of this document
+
+-----
 
 ## Dependencies
 
@@ -106,3 +110,37 @@ still be compilable with cmake and make./
 
 ## How to write a README
 A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
+
+# Implementation reflection 
+
+## The Model
+
+the physical model used was the same one as provided in the course in the bycicle model chapter 18.5.
+
+measured values were : x position , y postion , linear velocity and orientation.
+
+actutors output were : accelartion and steering angle
+
+the update model followed the following equations
+![alt text](img/model.png)
+
+## number of points and time step
+
+this part was among the trickest part to tune time step was chosen to be 0.1 and points to be 10
+i would have liked to make it more than 1 second to make the system more pro-active to future changes
+when trying higher point the system tends to be unstable 
+
+i think among the reason the fitted polynomial didn't fit quit well for longer road segement
+as a propossed improvmenet different types of polynomial can be chossen before each itteration based on the road profile
+
+## Poly fit and main loop
+
+points were transfered to the car coerdinates system which greatly simplified the math for the path later.
+the fitting part was already provided and as suggested a 3rd degree curve was chosen as a reference path.
+the main loop was also straight forward since all the main work was done by the Ipopt library anyway.
+
+## Latency
+
+the latency was already provided in the main repo but make a thread sleep,
+in a real embedded application however this would have been achieved using a preidoic task with certain frequency which was going to have the same effect as the solution done in the code anyway
+
