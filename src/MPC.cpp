@@ -42,7 +42,7 @@ private:
   // Fitted polynomial coefficients
   Eigen::VectorXd coeffs;
 
-  double weight_cte   = 150 ;
+  double weight_cte   = 300 ;
   double weight_epsi  = 60 ;
   double weight_v     = 10 ;
   double weight_a     = 400 ;
@@ -113,9 +113,18 @@ public:
       AD<double> cte0 = vars[cte_start + t - 1];
       AD<double> epsi0 = vars[epsi_start + t - 1];
 
-      // Only consider the actuation at time t.
-      AD<double> delta0 = vars[delta_start + t - 1];
-      AD<double> a0 = vars[a_start + t - 1];
+       // Only consider the actuation at time t.
+      AD<double> delta0;
+      AD<double> a0;
+  
+      if (t > 1) { 
+        a0 = vars[a_start + t - 2];
+        delta0 = vars[delta_start + t - 2];
+      } else {
+        delta0 = vars[delta_start + t - 1];
+        a0 = vars[a_start + t - 1];
+      }
+
 
       //polynomial is of 3rd degree
       AD<double> f0 = coeffs[0] + coeffs[1]  * x0 + coeffs[2] * CppAD::pow(x0,2) + coeffs[3] * CppAD::pow(x0,3);;
@@ -161,6 +170,9 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   double cte = state[4];
   double epsi = state[5];
 
+  static double prev_a = 0;
+  static double prev_delta = 0;
+
   // TODO: Set the number of model variables (includes both states and inputs).
   // For example: If the state is a 4 element vector, the actuators is a 2
   // element vector and there are 10 timesteps. The number of variables is:
@@ -191,18 +203,23 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
 
   //set the limit of the steering angle from -1 to 1
   //will be converted to -25 to 25 in the main function before sent to the simulator
-  for(int i = delta_start ; i < a_start ; i++){
+  for(int i = delta_start +1 ; i < a_start ; i++){
 
     vars_lowerbound[i] = -1.0 ;
-    vars_upperbound[i] =  1.0 ;
+    vars_upperbound[i] = 1.0 ;
   }
 
   //upper and lower limit for the pwer train commands
-  for(int i = a_start ; i < n_vars ; i++){
+  for(int i = a_start+1 ; i < n_vars ; i++){
 
     vars_lowerbound[i] = -1.0;
     vars_upperbound[i] = 1.0;
   }
+
+  vars_lowerbound[delta_start] = prev_delta;
+  vars_upperbound[delta_start] = prev_delta;
+  vars_lowerbound[a_start] = prev_a;
+  vars_upperbound[a_start] = prev_a;
 
   // Lower and upper limits for the constraints
   // Should be 0 besides initial state.
@@ -265,9 +282,11 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   
   vector<double> ret_val;
 
+  prev_delta = solution.x[delta_start + 1];
+  prev_a = solution.x[a_start + 1 ] ;
 
-  ret_val.push_back(solution.x[delta_start +1 ]);
-  ret_val.push_back(solution.x[a_start + 1]);
+  ret_val.push_back(solution.x[delta_start + 1]);
+  ret_val.push_back(solution.x[a_start  + 1]);
 
   for ( int i = 0 ; i < N - 2; i++ ) {
     ret_val.push_back(solution.x[x_start + i + 1]);
